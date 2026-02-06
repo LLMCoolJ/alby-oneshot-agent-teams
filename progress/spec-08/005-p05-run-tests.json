@@ -1,0 +1,15 @@
+{
+  "status": "PARTIAL",
+  "summary": "Unit tests and E2E tests all pass. Typecheck has 3 errors - all unused imports/variables in source files.",
+  "typecheck": {
+    "passed": false,
+    "errors": [
+      "src/pages/2-LightningAddress/components/LightningAddressDisplay.tsx(1,22): error TS6133: 'Badge' is declared but its value is never read.",
+      "src/pages/2-LightningAddress/components/PayToAddressForm.tsx(2,25): error TS6133: 'Badge' is declared but its value is never read.",
+      "src/pages/2-LightningAddress/index.tsx(7,28): error TS6133: 'clearLogs' is declared but its value is never read."
+    ]
+  },
+  "unit_tests": {"passed": true, "total": 306, "failed": 0, "errors": []},
+  "e2e_tests": {"passed": true, "total": 9, "failed": 0, "errors": []},
+  "all_passed": false
+}

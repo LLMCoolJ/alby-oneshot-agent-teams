@@ -1,0 +1,8 @@
+{
+  "status": "SUCCESS",
+  "summary": "All checks pass after builder fixes. Typecheck clean, 306 unit tests pass, 9 E2E tests pass.",
+  "typecheck": {"passed": true, "errors": []},
+  "unit_tests": {"passed": true, "total": 306, "failed": 0, "errors": []},
+  "e2e_tests": {"passed": true, "total": 9, "failed": 0, "errors": []},
+  "all_passed": true
+}

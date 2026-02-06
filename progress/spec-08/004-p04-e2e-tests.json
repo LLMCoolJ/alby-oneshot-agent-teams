@@ -1,0 +1,20 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created 9 E2E tests for spec 08. All 27 tests pass across 3 browsers (chromium, firefox, Mobile Safari). Tests cover page load, title/description, wallet cards, connection forms, disconnected badges, transaction log, sidebar navigation, active link highlighting, and scenario content visibility.",
+  "e2e_files_created": ["tests/e2e/08-lightning-address.spec.ts"],
+  "screenshots_will_capture": [
+    "tests/e2e/screenshots/08-lightning-address-initial.png",
+    "tests/e2e/screenshots/08-lightning-address-form-filled.png"
+  ],
+  "flows_tested": [
+    "Page loads at /lightning-address route with screenshot",
+    "Page title and description displayed",
+    "Alice and Bob wallet cards present",
+    "Wallet cards show NWC connection forms when disconnected",
+    "Wallet cards display disconnected status badges",
+    "Transaction log section present",
+    "Navigation from sidebar",
+    "Lightning address sidebar link is highlighted as active",
+    "Scenario content hidden when wallets disconnected"
+  ]
+}
