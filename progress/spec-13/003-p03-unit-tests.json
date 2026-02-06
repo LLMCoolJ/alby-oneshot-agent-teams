@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created 2 test files with 43 unit tests covering useZap hook and page components.",
+  "test_files_created": ["tests/unit/hooks/useZap.test.ts", "tests/unit/pages/NostrZap.test.tsx"],
+  "test_count": 43,
+  "coverage_areas": ["useZap hook", "NostrZapPage", "MockNostrNote", "ZapForm", "ZapResult", "formatTimeAgo"]
+}

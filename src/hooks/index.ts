@@ -11,4 +11,4 @@ export { useLightningAddressPayment } from './useLightningAddressPayment';
 export { useNotifications } from './useNotifications';
 export { useHoldInvoice } from './useHoldInvoice';
 export { useTransactions } from './useTransactions';
-// export { useZap } from './useZap';
+export { useZap } from './useZap';

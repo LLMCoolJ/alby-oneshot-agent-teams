@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created 1 E2E test file with 10 tests for Nostr Zap page.",
+  "e2e_files_created": ["tests/e2e/13-nostr-zap.spec.ts"],
+  "screenshots_will_capture": ["tests/e2e/screenshots/13-nostr-zap-initial.png", "tests/e2e/screenshots/13-nostr-zap-form.png"],
+  "flows_tested": ["page load", "title/description", "wallet cards", "connection forms", "disconnected badges", "transaction log", "educational content", "zap form hidden", "scenario content hidden", "sidebar navigation"]
+}
