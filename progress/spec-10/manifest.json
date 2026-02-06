@@ -1,0 +1,21 @@
+{
+  "spec_number": "10",
+  "spec_path": "specs/10-scenario-4-hold-invoice.md",
+  "spec_name": "scenario-4-hold-invoice",
+  "page_url": "/scenarios/4-hold-invoice",
+  "status": "in_progress",
+  "current_phase": 9,
+  "next_sequence": 8,
+  "iterations": { "verify": 0, "test_fix": 0, "refactor": 0 },
+  "phases": {
+    "1_implement":   { "status": "done", "latest": "001-p01-implement.json" },
+    "2_verify":      { "status": "done", "latest": "002-p02-verify.json" },
+    "3_unit_tests":  { "status": "done", "latest": "003-p03-unit-tests.json" },
+    "4_e2e_tests":   { "status": "done", "latest": "004-p04-e2e-tests.json" },
+    "5_run_tests":   { "status": "done", "latest": "005-p05-run-tests.json" },
+    "6_fix":         { "status": "pending", "latest": null },
+    "7_screenshots": { "status": "done", "latest": "006-p07-screenshots.json" },
+    "8_code_review": { "status": "done", "latest": "007-p08-code-review.json" },
+    "9_commit":      { "status": "pending", "latest": null }
+  }
+}

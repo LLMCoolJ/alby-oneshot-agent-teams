@@ -1,0 +1,8 @@
+{
+  "status": "SUCCESS",
+  "summary": "All checks pass. Typecheck clean. 436 unit tests pass across 32 files. 10 E2E tests pass on Chromium.",
+  "typecheck": {"passed": true, "errors": []},
+  "unit_tests": {"passed": true, "total": 436, "failed": 0, "errors": []},
+  "e2e_tests": {"passed": true, "total": 10, "failed": 0, "errors": []},
+  "all_passed": true
+}
