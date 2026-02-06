@@ -1,0 +1,23 @@
+{
+  "status": "PARTIAL",
+  "summary": "All 13 files exist at correct locations. 2 TypeScript errors (unused imports). Missing data-testid attributes on wallet components.",
+  "verification_passed": false,
+  "acceptance_criteria": [
+    {"criterion": "WalletProvider wraps the application", "passed": true, "reason": "Correct useReducer/useCallback/useRef implementation"},
+    {"criterion": "Both Alice and Bob wallets can connect independently", "passed": true, "reason": "Per-wallet state via walletId"},
+    {"criterion": "Connection state persists across component re-renders", "passed": true, "reason": "useReducer + useRef persist"},
+    {"criterion": "Balance updates after payments", "passed": true, "reason": "refreshBalance called after payInvoice; polling via setInterval"},
+    {"criterion": "Error states are properly displayed", "passed": true, "reason": "SET_ERROR action; WalletConnect shows errors"},
+    {"criterion": "NWC clients are properly cleaned up on disconnect", "passed": true, "reason": "client.close() + null on disconnect"},
+    {"criterion": "All hooks throw when used outside provider", "passed": true, "reason": "if (!context) throw Error"},
+    {"criterion": "All tests pass", "passed": false, "reason": "Typecheck fails with 2 errors"}
+  ],
+  "missing_files": [],
+  "issues": [
+    {"file": "src/components/wallet/WalletCard.tsx", "issue": "Unused import: Spinner"},
+    {"file": "src/components/wallet/BalanceDisplay.tsx", "issue": "Unused destructured variable: fiatValue"},
+    {"file": "src/components/wallet/WalletConnect.tsx", "issue": "Missing data-testid on Button and Input"},
+    {"file": "src/components/wallet/BalanceDisplay.tsx", "issue": "Missing data-testid on sats amount and fiat value"},
+    {"file": "src/components/wallet/WalletCard.tsx", "issue": "Missing data-testid on status badge and balance area"}
+  ]
+}

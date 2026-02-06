@@ -14,6 +14,8 @@ export interface CardProps {
   footer?: React.ReactNode;
   /** Body padding size */
   padding?: 'none' | 'sm' | 'md' | 'lg';
+  /** Test ID for testing */
+  'data-testid'?: string;
 }
 
 const paddingClasses: Record<NonNullable<CardProps['padding']>, string> = {
@@ -32,12 +34,13 @@ export function Card({
   headerAction,
   footer,
   padding = 'md',
+  'data-testid': testId = 'card',
 }: CardProps) {
   const hasHeader = title || subtitle || headerAction;
 
   return (
     <div
-      data-testid="card"
+      data-testid={testId}
       className={[
         'bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden',
         className,

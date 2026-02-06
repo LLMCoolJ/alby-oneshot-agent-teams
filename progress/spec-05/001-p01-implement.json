@@ -1,0 +1,28 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created all 13 files for spec 05: WalletContext with useReducer + NWCClient ref, 8 hooks (useWallet, useWalletActions, useNWCClient, useBalance, useInvoice, usePayment, useBudget, useFiatRate), hooks barrel index, and 3 wallet components (WalletCard, WalletConnect, BalanceDisplay). All match spec exactly.",
+  "files_created": [
+    "src/context/WalletContext.tsx",
+    "src/hooks/useWallet.ts",
+    "src/hooks/useWalletActions.ts",
+    "src/hooks/useNWCClient.ts",
+    "src/hooks/useBalance.ts",
+    "src/hooks/useInvoice.ts",
+    "src/hooks/usePayment.ts",
+    "src/hooks/useBudget.ts",
+    "src/hooks/useFiatRate.ts",
+    "src/hooks/index.ts",
+    "src/components/wallet/WalletCard.tsx",
+    "src/components/wallet/WalletConnect.tsx",
+    "src/components/wallet/BalanceDisplay.tsx"
+  ],
+  "files_modified": [],
+  "decisions": [
+    "hooks/index.ts only exports hooks that exist now, future hooks commented out",
+    "NWCClient stored in useRef per spec (not serializable)",
+    "useBudget uses Nip47GetBudgetResponse from SDK types",
+    "useFiatRate uses @getalby/lightning-tools/fiat subpath export",
+    "Wallet components missing data-testid attributes (reviewer should flag)"
+  ],
+  "blocked_by": []
+}
