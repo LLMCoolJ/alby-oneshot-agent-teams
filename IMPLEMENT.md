@@ -1,10 +1,10 @@
 # Implement All Specs
 
-Run each spec sequentially using `/implement-spec`. Each spec handles its own commit and tag via Phase 9 — no manual git steps needed between specs.
+Run each spec sequentially using `/implement-spec`. Each spec creates a persistent agent team (builder, tester, reviewer) for the duration of that spec's implementation, then tears it down. Each spec handles its own commit and tag via Phase 9 — no manual git steps needed between specs.
 
 **Use the task list (TaskCreate/TaskUpdate) to track progress.** Create a task for each spec before starting, mark it `in_progress` when you begin, and `completed` when done. This keeps the workflow organized and makes it easy to see where you left off.
 
-**Resume:** If context is lost mid-spec, just re-run `/implement-spec XX`. The manifest at `progress/spec-XX/manifest.json` tracks phase-level state, so it picks up exactly where it left off.
+**Resume:** If context is lost mid-spec, just re-run `/implement-spec XX`. The manifest at `progress/spec-XX/manifest.json` tracks phase-level state, so it picks up exactly where it left off. A new team is created on resume — teammates start fresh but receive full context from artifacts.
 
 ## Instructions
 
@@ -29,7 +29,7 @@ Update the task to `completed` when done.
 ### 5. Compact for Next Spec
 Run `/compact` with this focus:
 ```
-/compact Completed spec XX. Next: spec YY ([spec name]). Task list tracks progress. Ready to continue with /implement-spec YY.
+/compact Completed spec XX (team torn down). Next: spec YY ([spec name]). Task list tracks progress. Ready to continue with /implement-spec YY.
 ```
 
 This preserves:
@@ -89,6 +89,7 @@ Execute in this order:
 - `/implement-spec 15` (Testing Strategy)
 
 **Notes:**
+- Each spec creates a team (builder, tester, reviewer), implements, and tears it down
 - Each spec commits and tags automatically (Phase 9)
-- If context lost mid-spec, re-run `/implement-spec XX` — manifest handles resume
+- If context lost mid-spec, re-run `/implement-spec XX` — manifest handles resume, new team is created
 - The task list survives compaction — it's your source of truth for progress

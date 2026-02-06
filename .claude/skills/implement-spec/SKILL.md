@@ -1,6 +1,6 @@
 # Spec Implementation Workflow
 
-A generic workflow for implementing specs from a `specs/` directory using sub-agents with fresh context for each phase.
+A generic workflow for implementing specs from a `specs/` directory using persistent agent teams with retained context across phases.
 
 ## Requirements
 
@@ -29,19 +29,30 @@ flowchart TD
     DEP -->|No| STOP1([STOP: Implement deps first])
     DEP -->|Yes| SKILL{Project skill<br/>required?}
     SKILL -->|Yes| INVOKE[Invoke skill from PREAMBLE]
-    SKILL -->|No| LOOP
-    INVOKE --> LOOP
+    SKILL -->|No| TEAM_SETUP
+    INVOKE --> TEAM_SETUP
 
-    RESUME --> LOOP
+    RESUME --> TEAM_CHECK{Team<br/>exists?}
+    TEAM_CHECK -->|No| TEAM_SETUP
+    TEAM_CHECK -->|Yes| LOOP
+
+    TEAM_SETUP[Team Setup:<br/>Create team + spawn<br/>builder, tester, reviewer] --> LOOP
 
     LOOP[Orchestrator Loop] --> READ_M[Read manifest.json]
-    READ_M --> SPAWN[Spawn sub-agent for current_phase]
-    SPAWN --> WRITE_A[Write artifact file]
+    READ_M --> ROUTE{Route phase<br/>to teammate}
+    ROUTE -->|P1,P6,P9| BUILDER[SendMessage to builder]
+    ROUTE -->|P3,P4,P5| TESTER[SendMessage to tester]
+    ROUTE -->|P2,P7,P8| REVIEWER[SendMessage to reviewer]
+    BUILDER --> RECEIVE[Receive result message]
+    TESTER --> RECEIVE
+    REVIEWER --> RECEIVE
+    RECEIVE --> WRITE_A[Write artifact file]
     WRITE_A --> UPDATE_M[Update manifest.json]
     UPDATE_M --> DONE_CHECK{current_phase > 9?}
-    DONE_CHECK -->|Yes| P10[Phase 10: Report to user]
+    DONE_CHECK -->|Yes| TEAM_TEARDOWN[Team Teardown:<br/>Shutdown teammates<br/>+ delete team]
     DONE_CHECK -->|No| READ_M
 
+    TEAM_TEARDOWN --> P10[Phase 10: Report to user]
     P10 --> DONE([Done])
 ```
 
@@ -49,37 +60,106 @@ flowchart TD
 
 ## CRITICAL RULES
 
-1. For EACH phase, spawn a Task agent (subagent_type: "general-purpose")
-2. **Prepend `specs/PREAMBLE.md` contents to every sub-agent prompt**
+1. For EACH phase, send a message to the appropriate teammate via `SendMessage` (see Teammate Role Assignments)
+2. **Send `specs/PREAMBLE.md` contents in each teammate's FIRST message only** — subsequent messages include a reference reminder instead
 3. **Replace all `{{PLACEHOLDERS}}` with actual values**
 4. Pass ONLY essential context between phases — read the `latest` artifact from the manifest, not full conversation history
 5. **Read and update `progress/spec-NN/manifest.json` before and after EVERY phase**
-6. After each sub-agent returns, the **orchestrator** writes the artifact file and updates the manifest
+6. After each teammate responds, the **lead** writes the artifact file and updates the manifest
 7. Respect iteration limits — STOP and report if exceeded
 8. **DO NOT** proceed to a phase unless the manifest shows it as the `current_phase`
-9. **DO NOT** do any phase work inline — every phase goes through a sub-agent
-10. **DO NOT** combine multiple phases into a single sub-agent call
+9. **DO NOT** do any phase work inline — every phase goes through a teammate message
+10. **Teammates may handle consecutive phases of their type** (e.g., tester receives Phase 3 then Phase 4 as separate messages), but each phase is still a separate message/response cycle with its own artifact
 11. **Tasks (TaskCreate/TaskUpdate) are for spec-level tracking only** (e.g., "Implement spec 08"). DO NOT create tasks for individual phases — the manifest handles phase tracking.
+12. **Create exactly ONE team per spec.** Tear it down after Phase 10. Do NOT reuse teams across specs.
+13. **If a teammate fails to respond**, retry once. If still no response, fall back to spawning a fresh Task agent (subagent_type: "general-purpose") for that single phase only.
 
 ---
 
-## HOW TO CONSTRUCT SUB-AGENT PROMPTS
+## TEAMMATE ROLE ASSIGNMENTS
 
+### Role Table
+
+| Teammate | Type | Phases | Responsibilities |
+|----------|------|--------|-----------------|
+| **builder** | general-purpose | 1 (Implement), 6 (Fix), 9 (Commit) | Implements code, fixes test/review failures, commits. Retains implementation decisions across fix loops. |
+| **tester** | general-purpose | 3 (Unit Tests), 4 (E2E Tests), 5 (Run Tests) | Writes and runs all tests. Understands test structure when interpreting failures. |
+| **reviewer** | general-purpose | 2 (Verify), 7 (Screenshots), 8 (Code Review) | All verification/review phases. Builds consistent understanding of acceptance criteria. |
+| **lead** | orchestrator (you) | Pre-flight, manifest, loop logic, Phase 10 | Manages team lifecycle, routes work, writes artifacts, controls loops, reports to user. |
+
+### Phase-to-Teammate Routing
+
+```
+Phase 1  (Implement)      → builder
+Phase 2  (Verify)         → reviewer
+Phase 3  (Unit Tests)     → tester
+Phase 4  (E2E Tests)      → tester
+Phase 5  (Run Tests)      → tester
+Phase 6  (Fix Failures)   → builder
+Phase 7  (Screenshots)    → reviewer
+Phase 8  (Code Review)    → reviewer
+Phase 9  (Commit)         → builder
+Phase 10 (Report)         → lead (direct, no message)
+```
+
+### Context Retention Wins
+
+1. **builder Phase 1 → Phase 6**: When tests fail, the builder already knows WHY it made implementation decisions. No need to re-read every file and re-derive the architecture. This is the biggest win — the fix loop (Phase 5 → 6 → 5 → 6...) can iterate up to 5 times, and each Phase 6 currently starts from scratch.
+2. **builder Phase 6 → Phase 6 (subsequent iterations)**: On the second or third fix attempt, the builder remembers what it already tried and failed. No duplicate fixes.
+3. **tester Phase 3 → Phase 4**: After writing unit tests, the tester already understands the component structure and can write better E2E tests targeting the same behaviors.
+4. **tester Phase 3/4 → Phase 5**: The tester who wrote the tests knows their intent when reading failure output. Better root cause identification.
+5. **reviewer Phase 2 → Phase 7 → Phase 8**: The reviewer builds a deep understanding of the spec's acceptance criteria in Phase 2, then applies that same understanding when reviewing screenshots and code quality.
+6. **builder Phase 1 → Phase 9**: The builder has full implementation context for writing a meaningful commit message.
+
+---
+
+## HOW TO CONSTRUCT TEAMMATE MESSAGES
+
+**First message to a teammate:**
 ```
 ┌─────────────────────────────────────┐
 │  Contents of specs/PREAMBLE.md      │
 │  (project context, standards, etc.) │
 ├─────────────────────────────────────┤
+│  [PHASE N: PHASE_NAME]             │
 │  Phase template with {{FILLED}}     │
 │  placeholder values                 │
 ├─────────────────────────────────────┤
 │  CONTEXT FROM PREVIOUS PHASES:      │
-│  - Read latest artifact from        │
-│    manifest for relevant phases     │
+│  - Artifact data per dependency     │
+│    table                            │
 │  - Iteration counts from manifest   │
-│  - Errors to fix (from artifacts)   │
 └─────────────────────────────────────┘
 ```
+
+**Subsequent messages to same teammate:**
+```
+┌─────────────────────────────────────┐
+│  PREAMBLE REMINDER: "Refer to the  │
+│  PREAMBLE provided in your initial  │
+│  message for project context,       │
+│  coding standards, test structure." │
+├─────────────────────────────────────┤
+│  [PHASE N: PHASE_NAME]             │
+│  Phase template with {{FILLED}}     │
+│  placeholder values                 │
+├─────────────────────────────────────┤
+│  CONTEXT FROM PREVIOUS PHASES:      │
+│  - Artifact data per dependency     │
+│    table                            │
+│  - Iteration counts from manifest   │
+└─────────────────────────────────────┘
+```
+
+**Message framing convention** — Phase headers help teammates track which phase they're executing:
+- Lead sends: `[PHASE N: PHASE_NAME]`
+- Teammate responds: `[PHASE N RESULT]` followed by JSON artifact
+
+**PREAMBLE tracking** — The lead maintains a mental flag per teammate:
+```
+preamble_sent = { builder: false, tester: false, reviewer: false }
+```
+Set to `true` after first message to each teammate.
 
 ---
 
@@ -190,7 +270,7 @@ Each phase may require data from previous phases' artifacts. **Always read the `
 ## PRE-FLIGHT CHECKS (Do these yourself, not via agent)
 
 0. **Check for existing manifest:** Look for `progress/spec-{{SPEC_NUMBER}}/manifest.json`
-   - If it exists and `status` is `"in_progress"` → **resume** from `current_phase` (skip remaining pre-flight, go directly to ORCHESTRATOR LOOP)
+   - If it exists and `status` is `"in_progress"` → **resume** from `current_phase` (skip remaining pre-flight, go to TEAM SETUP then ORCHESTRATOR LOOP)
    - If it exists and `status` is `"done"` → tell user this spec is already complete, **STOP**
    - If it exists and `status` is `"blocked"` → tell user previous run was blocked, show manifest contents, **STOP**
    - If it doesn't exist → create the `progress/spec-{{SPEC_NUMBER}}/` directory and initial `manifest.json` (all phases pending, `current_phase: 1`, `next_sequence: 1`, `status: "in_progress"`), then continue pre-flight
@@ -224,6 +304,90 @@ Each phase may require data from previous phases' artifacts. **Always read the `
 
 ---
 
+## TEAM SETUP
+
+Create the team and spawn teammates before entering the orchestrator loop.
+
+### Steps
+
+1. **Create the team:**
+   ```
+   TeamCreate({
+     team_name: "spec-{SPEC_NUMBER}",
+     description: "Implementing spec {SPEC_NUMBER}: {SPEC_NAME}"
+   })
+   ```
+
+2. **Spawn all three teammates in a SINGLE message** (parallel initialization):
+   ```
+   // All three in one message for parallel spawn:
+
+   Task({
+     team_name: "spec-{SPEC_NUMBER}",
+     name: "builder",
+     subagent_type: "general-purpose",
+     prompt: "You are the BUILDER teammate on team spec-{SPEC_NUMBER}.
+
+   YOUR ROLE: Implement code (Phase 1), fix test/review failures (Phase 6), and commit (Phase 9).
+
+   WORKFLOW:
+   - The lead will send you phase assignments via message
+   - Each message contains a [PHASE N: NAME] header and detailed instructions
+   - Do the work described (read files, write code, run commands as needed)
+   - Respond with ONLY a [PHASE N RESULT] header followed by the JSON artifact described in the instructions
+   - Do NOT take any action until you receive a phase assignment
+
+   Wait for your first assignment."
+   })
+
+   Task({
+     team_name: "spec-{SPEC_NUMBER}",
+     name: "tester",
+     subagent_type: "general-purpose",
+     prompt: "You are the TESTER teammate on team spec-{SPEC_NUMBER}.
+
+   YOUR ROLE: Write unit tests (Phase 3), write E2E tests (Phase 4), and run all tests (Phase 5).
+
+   WORKFLOW:
+   - The lead will send you phase assignments via message
+   - Each message contains a [PHASE N: NAME] header and detailed instructions
+   - Do the work described (read files, write tests, run test commands as needed)
+   - Respond with ONLY a [PHASE N RESULT] header followed by the JSON artifact described in the instructions
+   - Do NOT take any action until you receive a phase assignment
+
+   Wait for your first assignment."
+   })
+
+   Task({
+     team_name: "spec-{SPEC_NUMBER}",
+     name: "reviewer",
+     subagent_type: "general-purpose",
+     prompt: "You are the REVIEWER teammate on team spec-{SPEC_NUMBER}.
+
+   YOUR ROLE: Verify implementation (Phase 2), review screenshots (Phase 7), and code review (Phase 8).
+
+   WORKFLOW:
+   - The lead will send you phase assignments via message
+   - Each message contains a [PHASE N: NAME] header and detailed instructions
+   - Do the work described (read files, check criteria, review images as needed)
+   - Respond with ONLY a [PHASE N RESULT] header followed by the JSON artifact described in the instructions
+   - Do NOT take any action until you receive a phase assignment
+
+   Wait for your first assignment."
+   })
+   ```
+
+3. **Initialize PREAMBLE tracking:**
+   ```
+   preamble_sent = { builder: false, tester: false, reviewer: false }
+   ```
+
+### Resume Handling
+
+When resuming from a manifest (`status: "in_progress"`), the team must still be created fresh — teams do not persist across sessions. The manifest tells the lead which phase to resume from, so no work is lost. Teammates start with clean context on resume, but receive PREAMBLE + relevant artifact context in their first message, which matches the information a fresh Task agent would have received in the current system.
+
+---
+
 ## ORCHESTRATOR LOOP
 
 This is the core execution loop. Follow it mechanically — no shortcuts.
@@ -231,24 +395,58 @@ This is the core execution loop. Follow it mechanically — no shortcuts.
 ```
 1. Read progress/spec-NN/manifest.json
 2. phase = current_phase from manifest
-3. Spawn sub-agent for that phase (using the phase template from this document)
-4. Write sub-agent's JSON response to progress/spec-NN/{next_sequence:03d}-p{phase:02d}-{slug}.json
-5. Update manifest.json:
+3. Determine teammate for this phase (Phase-to-Teammate Routing table)
+4. Construct the message:
+   a. If preamble_sent[teammate] is false:
+      - Prepend full PREAMBLE contents
+      - Set preamble_sent[teammate] = true
+   b. If preamble_sent[teammate] is true:
+      - Prepend PREAMBLE reminder text
+   c. Add phase header: [PHASE {N}: {PHASE_NAME}]
+   d. Append phase template with filled placeholders
+   e. Append artifact context from previous phases (per Dependency Table)
+5. Send message to teammate:
+   SendMessage({
+     type: "message",
+     recipient: "{teammate}",
+     content: "{constructed message}",
+     summary: "Phase {N}: {phase_name} for spec {SPEC_NUMBER}"
+   })
+6. Wait for teammate's response message (automatic delivery)
+7. Parse JSON artifact from response
+8. Write artifact to progress/spec-NN/{next_sequence:03d}-p{phase:02d}-{slug}.json
+9. Update manifest.json:
    a. Update phase's "latest" to point to the new artifact filename
    b. Increment next_sequence
    c. Apply LOOP LOGIC (from the phase's section) to determine next current_phase:
       - If phase succeeded and no loop needed: mark phase "done", advance current_phase
       - If phase failed and loop limit not reached: mark target phase "in_progress",
         set current_phase to loop target, increment iteration counter
-      - If phase failed and loop limit reached: set status to "blocked", STOP
+      - If phase failed and loop limit reached: set status to "blocked", proceed to TEAM TEARDOWN, then STOP
    d. Write updated manifest
-6. If current_phase > 9: set manifest status to "done", proceed to Phase 10 (report to user)
-7. Otherwise: go to step 1
+10. If current_phase > 9: set manifest status to "done", proceed to TEAM TEARDOWN, then Phase 10
+11. Otherwise: go to step 1
 ```
 
-### Example: Preparing Phase 8 Prompt (Multi-Artifact)
+### Teammate Failure Handling
 
-Phase 8 (Code Review) requires artifacts from phases 1, 3, and 4. Here's how to merge them:
+If a teammate does not respond or sends invalid JSON:
+1. Send a follow-up message asking them to re-send as JSON only
+2. If second attempt fails:
+   a. Log the failure
+   b. Fall back to spawning a fresh Task agent for this phase:
+      ```
+      Task({
+        subagent_type: "general-purpose",
+        prompt: "{full prompt with PREAMBLE + phase template + artifacts}"
+      })
+      ```
+   c. Continue the orchestrator loop with the Task agent's response
+   d. The teammate remains available in the team for future phases
+
+### Example: Preparing Phase 8 Message (Multi-Artifact)
+
+Phase 8 (Code Review) requires artifacts from phases 1, 3, and 4. Here's how to construct the message to the reviewer:
 
 ```
 1. Read each artifact's filename from manifest:
@@ -271,11 +469,13 @@ Phase 8 (Code Review) requires artifacts from phases 1, 3, and 4. Here's how to 
 
 4. Fill placeholder in Phase 8 template:
    FILES TO REVIEW: ["src/pages/Dashboard.tsx", "src/hooks/useDashboard.ts", ...]
+
+5. Send via SendMessage to "reviewer" with summary "Phase 8: code review for spec NN"
 ```
 
 ---
 
-## PHASE 1: IMPLEMENT
+## PHASE 1: IMPLEMENT (→ builder)
 
 ```
 TASK: Implement spec {{SPEC_PATH}}
@@ -325,7 +525,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 2: VERIFY IMPLEMENTATION
+## PHASE 2: VERIFY IMPLEMENTATION (→ reviewer)
 
 ```
 TASK: Verify implementation matches spec
@@ -372,7 +572,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 3: UNIT TESTS
+## PHASE 3: UNIT TESTS (→ tester)
 
 ```
 TASK: Write unit tests for spec {{SPEC_PATH}}
@@ -406,7 +606,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 4: E2E TESTS
+## PHASE 4: E2E TESTS (→ tester)
 
 ```
 TASK: Write E2E tests for spec {{SPEC_PATH}}
@@ -452,7 +652,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 5: RUN TESTS
+## PHASE 5: RUN TESTS (→ tester)
 
 ```
 TASK: Run tests for the implemented spec
@@ -500,7 +700,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 6: FIX FAILURES
+## PHASE 6: FIX FAILURES (→ builder)
 
 ```
 TASK: Fix test failures
@@ -538,7 +738,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 7: REVIEW SCREENSHOTS
+## PHASE 7: REVIEW SCREENSHOTS (→ reviewer)
 
 ```
 TASK: Review E2E screenshots for visual issues
@@ -576,7 +776,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 8: CODE REVIEW
+## PHASE 8: CODE REVIEW (→ reviewer)
 
 ```
 TASK: Code review and refactor check
@@ -622,7 +822,7 @@ RETURN JSON:
 
 ---
 
-## PHASE 9: FINALIZE & COMMIT
+## PHASE 9: FINALIZE & COMMIT (→ builder)
 
 ```
 TASK: Commit spec implementation and tag for next spec
@@ -677,9 +877,35 @@ Note: `git add -A` in this phase will naturally include `progress/spec-NN/` — 
 
 ---
 
+## TEAM TEARDOWN
+
+After the orchestrator loop completes (current_phase > 9) OR when status is set to "blocked":
+
+1. **Send shutdown requests to all teammates:**
+   ```
+   SendMessage({ type: "shutdown_request", recipient: "builder", content: "Spec complete." })
+   SendMessage({ type: "shutdown_request", recipient: "tester", content: "Spec complete." })
+   SendMessage({ type: "shutdown_request", recipient: "reviewer", content: "Spec complete." })
+   ```
+
+2. **Wait for shutdown confirmations** (each teammate responds with shutdown_response approval)
+
+3. **Delete the team:**
+   ```
+   TeamDelete()
+   ```
+
+### Blocked Teardown
+If the spec is blocked (iteration limit exceeded), still tear down the team. The manifest preserves all state needed for a future resume attempt, which will create a new team.
+
+### Non-Response During Teardown
+If a teammate does not respond to shutdown within a reasonable time, proceed with TeamDelete() anyway.
+
+---
+
 ## PHASE 10: REPORT
 
-Phase 10 is **NOT** a sub-agent call. The orchestrator handles this directly.
+Phase 10 is **NOT** a teammate message. The lead handles this directly, AFTER team teardown.
 
 1. Read the manifest and latest artifacts for key phases (implement, run-tests, commit)
 2. Report to the user:
