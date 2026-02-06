@@ -6,8 +6,7 @@ export { useInvoice } from './useInvoice';
 export { usePayment } from './usePayment';
 export { useBudget } from './useBudget';
 export { useFiatRate } from './useFiatRate';
-// Future hooks (not yet implemented):
-// export { useTransactionLog } from './useTransactionLog';
+export { useTransactionLog } from './useTransactionLog';
 // export { useLightningAddressPayment } from './useLightningAddressPayment';
 // export { useNotifications } from './useNotifications';
 // export { useHoldInvoice } from './useHoldInvoice';
