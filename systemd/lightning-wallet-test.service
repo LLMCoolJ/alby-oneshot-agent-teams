@@ -1,0 +1,26 @@
+[Unit]
+Description=Lightning Wallet Demo - Test Runner
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/src/alby-oneshot-v5
+ExecStart=/usr/bin/npm test
+Restart=on-failure
+RestartSec=5
+
+# Process management - kills all child processes
+KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Environment
+Environment=NODE_ENV=test
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lightning-wallet-test
+
+[Install]
+WantedBy=default.target

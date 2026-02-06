@@ -13,7 +13,15 @@
     "test:coverage": "vitest --coverage",
     "test:e2e": "playwright test",
     "lint": "eslint . --ext ts,tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "setup:services": "node scripts/setup-services.js",
+    "dev:systemd": "systemctl --user start lightning-wallet-dev.service",
+    "dev:systemd:stop": "systemctl --user stop lightning-wallet-dev.service",
+    "dev:systemd:status": "systemctl --user status lightning-wallet-dev.service",
+    "dev:systemd:logs": "journalctl --user -u lightning-wallet-dev.service -f",
+    "cleanup:processes": "node scripts/cleanup-processes.js",
+    "health": "node scripts/health-check.js",
+    "diagnose": "node scripts/diagnose.js"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -1,0 +1,28 @@
+[Unit]
+Description=Lightning Wallet Demo - Development Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/src/alby-oneshot-v5
+ExecStart=/usr/bin/npm run dev
+Restart=on-failure
+RestartSec=5
+
+# Process management - kills all child processes
+KillMode=control-group
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Environment
+Environment=NODE_ENV=development
+Environment=PORT=3741
+Environment=VITE_API_URL=http://localhost:3741
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lightning-wallet-dev
+
+[Install]
+WantedBy=default.target

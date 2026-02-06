@@ -1,0 +1,12 @@
+{
+  "status": "SUCCESS",
+  "summary": "Fixed unit tests to check source service files in project systemd/ directory instead of installed copies.",
+  "fixes_applied": [
+    {
+      "file": "tests/unit/process-management.test.ts",
+      "issue": "Tests checked ~/.config/systemd/user/ instead of project systemd/ dir",
+      "fix": "Changed to check systemd/lightning-wallet-dev.service and systemd/lightning-wallet-test.service in project root"
+    }
+  ],
+  "root_causes": ["Unit tests verified installed locations instead of source files"]
+}

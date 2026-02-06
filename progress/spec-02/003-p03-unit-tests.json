@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "Unit test file exists and matches spec. 9 tests across 4 describe blocks.",
+  "test_files_created": ["tests/unit/process-management.test.ts"],
+  "test_count": 9,
+  "coverage_areas": ["service files", "helper scripts", "npm scripts", "logs directory"]
+}

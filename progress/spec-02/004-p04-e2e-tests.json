@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created E2E smoke test for spec 02. Verifies app loads without regressions.",
+  "e2e_files_created": ["tests/e2e/02-process-management.spec.ts"],
+  "screenshots_will_capture": ["tests/e2e/screenshots/02-process-management-smoke.png"],
+  "flows_tested": ["App loads correctly after process management changes with no console errors"]
+}

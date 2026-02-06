@@ -1,0 +1,11 @@
+{
+  "status": "PARTIAL",
+  "summary": "Typecheck passes. 2 of 12 unit tests fail (systemd service file existence checks). E2E passes.",
+  "typecheck": {"passed": true, "errors": []},
+  "unit_tests": {"passed": false, "total": 12, "failed": 2, "errors": [
+    "Process Management Setup > Service Files > has development service file: expected false to be true (service file not found at ~/.config/systemd/user/lightning-wallet-dev.service)",
+    "Process Management Setup > Service Files > has test service file: expected false to be true (service file not found at ~/.config/systemd/user/lightning-wallet-test.service)"
+  ]},
+  "e2e_tests": {"passed": true, "total": 1, "failed": 0, "errors": []},
+  "all_passed": false
+}
