@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created 1 E2E test file with 10 tests covering page load, UI elements, wallet state, and sidebar navigation.",
+  "e2e_files_created": ["tests/e2e/12-transaction-history.spec.ts"],
+  "screenshots_will_capture": ["tests/e2e/screenshots/12-transaction-history-initial.png", "tests/e2e/screenshots/12-transaction-history-form.png"],
+  "flows_tested": ["page load", "title/description", "wallet cards", "connection forms", "disconnected badges", "transaction log", "transaction list hidden when disconnected", "no details panel initially", "scenario content hidden", "sidebar navigation"]
+}

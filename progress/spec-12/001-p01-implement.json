@@ -1,0 +1,18 @@
+{
+  "status": "SUCCESS",
+  "summary": "Implemented spec 12 (scenario-6-transaction-history): useTransactions hook, TransactionList, TransactionDetails components, page component.",
+  "files_created": [
+    "src/hooks/useTransactions.ts",
+    "src/pages/6-TransactionHistory/components/TransactionList.tsx",
+    "src/pages/6-TransactionHistory/components/TransactionDetails.tsx"
+  ],
+  "files_modified": [
+    "src/hooks/index.ts",
+    "src/pages/6-TransactionHistory/index.tsx"
+  ],
+  "decisions": [
+    "Used existing Transaction and TransactionFilter types from @/types",
+    "data-testid attributes prefixed with walletId for unique identification"
+  ],
+  "blocked_by": []
+}
