@@ -3,9 +3,9 @@
   "spec_path": "specs/01-project-setup.md",
   "spec_name": "project-setup",
   "page_url": null,
-  "status": "in_progress",
-  "current_phase": 9,
-  "next_sequence": 8,
+  "status": "done",
+  "current_phase": 10,
+  "next_sequence": 9,
   "iterations": { "verify": 0, "test_fix": 0, "refactor": 0 },
   "phases": {
     "1_implement":   { "status": "done", "latest": "001-p01-implement.json" },
@@ -16,6 +16,6 @@
     "6_fix":         { "status": "pending", "latest": null },
     "7_screenshots": { "status": "done", "latest": "006-p07-screenshots.json" },
     "8_code_review": { "status": "done", "latest": "007-p08-code-review.json" },
-    "9_commit":      { "status": "pending", "latest": null }
+    "9_commit":      { "status": "done", "latest": "008-p09-commit.json" }
   }
 }
