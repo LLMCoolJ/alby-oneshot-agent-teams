@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created 1 test file with 48 unit tests covering all page components.",
+  "test_files_created": ["tests/unit/pages/ProofOfPayment.test.tsx"],
+  "test_count": 48,
+  "coverage_areas": ["InvoiceCreator", "PayAndProve", "PreimageVerifier", "page component", "verification flow", "manual verification", "error handling"]
+}
