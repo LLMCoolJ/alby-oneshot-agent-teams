@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "Created 42 unit tests for spec 14 covering ConversionCalculator, QuickReference, CurrencySelector, FiatConversionPage, and BalanceWithFiat.",
+  "test_files_created": ["tests/unit/pages/FiatConversion.test.tsx"],
+  "test_count": 42,
+  "coverage_areas": ["ConversionCalculator conversions", "QuickReference amounts", "CurrencySelector options", "FiatConversionPage rendering", "BalanceWithFiat display"]
+}
