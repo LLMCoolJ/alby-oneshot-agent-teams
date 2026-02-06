@@ -1,0 +1,8 @@
+{
+  "status": "SUCCESS",
+  "summary": "All typecheck and unit tests pass. 662 unit tests across 42 test files all green. No E2E tests for this backend-only spec.",
+  "typecheck": {"passed": true, "errors": []},
+  "unit_tests": {"passed": true, "total": 662, "failed": 0, "errors": []},
+  "e2e_tests": {"passed": true, "total": 0, "failed": 0, "errors": []},
+  "all_passed": true
+}

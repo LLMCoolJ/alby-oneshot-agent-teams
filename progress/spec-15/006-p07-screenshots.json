@@ -1,0 +1,8 @@
+{
+  "status": "SUCCESS",
+  "summary": "No screenshots to review - backend-only spec with no UI page.",
+  "screenshots_reviewed": 0,
+  "visual_issues": [],
+  "js_errors": [],
+  "all_clear": true
+}

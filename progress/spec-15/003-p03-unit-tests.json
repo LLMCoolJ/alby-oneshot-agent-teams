@@ -1,0 +1,7 @@
+{
+  "status": "SUCCESS",
+  "summary": "4 unit tests for backend server: demo wallets endpoint (availability + NWC URL security), demo status endpoint, health check.",
+  "test_files_created": ["tests/unit/server/demo.test.ts"],
+  "test_count": 4,
+  "coverage_areas": ["GET /api/demo/wallets - wallet availability", "GET /api/demo/wallets - NWC URL security", "GET /api/demo/status - demo mode status", "GET /health - health check"]
+}
