@@ -1,0 +1,10 @@
+{
+  "status": "SUCCESS",
+  "summary": "53 unit tests covering all 4 components + page-level integration. All passing.",
+  "test_files_created": [
+    "tests/unit/pages/SimplePayment.test.tsx",
+    "tests/integration/simple-payment.test.tsx"
+  ],
+  "test_count": 53,
+  "coverage_areas": ["component rendering", "form submission/validation", "invoice creation", "invoice display/QR/copy", "invoice decoding", "payment execution", "error handling", "loading/disabled states", "millisat conversion", "preimage/fee display", "page-level integration"]
+}
