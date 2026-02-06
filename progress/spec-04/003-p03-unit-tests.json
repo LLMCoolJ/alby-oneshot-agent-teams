@@ -1,0 +1,15 @@
+{
+  "status": "SUCCESS",
+  "summary": "All 38 unit tests pass across 7 component test files.",
+  "test_files_created": [
+    "tests/unit/components/Button.test.tsx",
+    "tests/unit/components/Input.test.tsx",
+    "tests/unit/components/Card.test.tsx",
+    "tests/unit/components/Badge.test.tsx",
+    "tests/unit/components/Spinner.test.tsx",
+    "tests/unit/components/QRCode.test.tsx",
+    "tests/unit/components/CopyButton.test.tsx"
+  ],
+  "test_count": 38,
+  "coverage_areas": ["Button variants/sizes/loading/icon", "Input label/error/hint/ref/addons", "Card title/subtitle/footer/headerAction", "Badge variants/sizes", "Spinner animation/accessibility/sizes", "QRCode value/size/label/showValue/copy", "CopyButton clipboard/feedback/timeout"]
+}
