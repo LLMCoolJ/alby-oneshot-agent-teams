@@ -1,0 +1,15 @@
+{
+  "status": "SUCCESS",
+  "summary": "All type definitions, type guards, constants, scenarios, and SDK re-exports match spec exactly. TypeScript compiles without errors. All 10 tests pass.",
+  "verification_passed": true,
+  "acceptance_criteria": [
+    {"criterion": "All types compile without errors", "passed": true, "reason": "npx tsc --noEmit completed with no errors"},
+    {"criterion": "Type guards work correctly with TypeScript narrowing", "passed": true, "reason": "All 5 type guards present with correct signatures and narrowing types"},
+    {"criterion": "SDK types are properly re-exported", "passed": true, "reason": "All SDK type re-exports present: 8 types + 6 error classes from @getalby/sdk/nwc, LightningInvoice from bolt11, LnUrlPayResponse+ZapArgs from lnurl, FiatCurrencyInfo from fiat"},
+    {"criterion": "Constants are frozen (readonly)", "passed": true, "reason": "Both CONSTANTS and SCENARIOS use 'as const'"},
+    {"criterion": "All tests pass", "passed": true, "reason": "10/10 tests pass"},
+    {"criterion": "Types provide good IntelliSense/autocomplete", "passed": true, "reason": "All types have JSDoc comments and unit annotations"}
+  ],
+  "missing_files": [],
+  "issues": []
+}
