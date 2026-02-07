@@ -44,17 +44,40 @@ export CLAUDE_CODE_TMPDIR="/path/to/your/clone"
 
 The settings files include `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: true`, which is required for the multi-agent `/implement-spec` workflow. This is already set in the checked-in config — just make sure you don't remove it.
 
-### 4. Run the build
+### 4. Generate the PREAMBLE
 
-Open Claude Code in the project directory and tell it:
+Open Claude Code in the project directory and run:
+
+```
+/implement-spec init
+```
+
+This spawns parallel sub-agents to extract structured data from every spec and generates `specs/PREAMBLE.md` — the context document that every agent receives during implementation. **This step is required before implementing any specs.**
+
+### 5. Run the build
+
+You have two options:
+
+**Option A: Build all specs at once**
 
 ```
 @IMPLEMENT.md
 ```
 
-This triggers the full sequential build of all 15 specs. Each spec is implemented, tested, reviewed, and committed automatically by a 3-agent team (builder, tester, reviewer) via the `/implement-spec` skill. Your implementation commits will land on `my-build`.
+This triggers the full sequential build of all 15 specs. Each spec is implemented, tested, reviewed, and committed automatically by a 3-agent team (builder, tester, reviewer) via the `/implement-spec` skill.
 
-If context is lost mid-spec, just re-run `/implement-spec NN` — the manifest at `progress/spec-NN/manifest.json` tracks phase-level state, so it picks up exactly where it left off.
+**Option B: Build specs one at a time**
+
+```
+/implement-spec 01
+/implement-spec 02
+/implement-spec 03
+...
+```
+
+This lets you inspect results between specs, make adjustments, or restart from a specific point. Specs must be built in order (each depends on earlier ones).
+
+In either case, if context is lost mid-spec, just re-run `/implement-spec NN` — the manifest at `progress/spec-NN/manifest.json` tracks phase-level state, so it picks up exactly where it left off.
 
 ---
 
