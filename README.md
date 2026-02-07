@@ -58,15 +58,7 @@ This spawns parallel sub-agents to extract structured data from every spec and g
 
 You have two options:
 
-**Option A: Build all specs at once**
-
-```
-@IMPLEMENT.md
-```
-
-This triggers the full sequential build of all 15 specs. Each spec is implemented, tested, reviewed, and committed automatically by a 3-agent team (builder, tester, reviewer) via the `/implement-spec` skill.
-
-**Option B: Build specs one at a time**
+**Option A: Build specs one at a time**
 
 ```
 /implement-spec 01
@@ -76,6 +68,14 @@ This triggers the full sequential build of all 15 specs. Each spec is implemente
 ```
 
 This lets you inspect results between specs, make adjustments, or restart from a specific point. Specs must be built in order (each depends on earlier ones).
+
+**Option B: Build all specs at once**
+
+```
+@IMPLEMENT.md
+```
+
+This triggers the full sequential build of all 15 specs. Each spec is implemented, tested, reviewed, and committed automatically by a 3-agent team (builder, tester, reviewer) via the `/implement-spec` skill.
 
 In either case, if context is lost mid-spec, just re-run `/implement-spec NN` — the manifest at `progress/spec-NN/manifest.json` tracks phase-level state, so it picks up exactly where it left off.
 
