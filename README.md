@@ -51,6 +51,7 @@ The settings files also include `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: true`, wh
   - [Step 4: Generate PREAMBLE.md](#step-4-generate-preamblemd)
   - [Step 5: Implement All Specs](#step-5-implement-all-specs)
 - [The IMPLEMENT.md Numbering Bug](#the-implementmd-numbering-bug)
+- [When Agent Teams Broke Down](#when-agent-teams-broke-down)
 - [What is MEMORY.md?](#what-is-memorymd)
 - [The Alby Agent Skill](#the-alby-agent-skill)
 - [The Generated Application](#the-generated-application)
@@ -214,33 +215,104 @@ This mismatch was caught during implementation by the agent's **MEMORY.md** syst
 
 ---
 
+## When Agent Teams Broke Down
+
+The 15-spec build ran as a single continuous Claude Code session, compacting context between specs with `/compact`. Each spec spawned a fresh 3-agent team (builder, tester, reviewer). This worked — until it didn't.
+
+### Quirky but Functional (Specs 01-08)
+
+The 3-agent teams worked as designed, but the orchestrator had to learn workarounds for recurring misbehaviors:
+
+- **Teammates acknowledging without executing** — A teammate would reply "Ready to proceed" instead of actually doing the work. The orchestrator learned to resend with "Execute it NOW"
+- **Phase confusion** — The tester would re-execute Phase 4 (write E2E tests) when asked to do Phase 5 (run tests). Required explicit: "Phase 4 is already done. Execute Phase 5 NOW."
+- **Reviewer going idle** — The reviewer would go idle before executing Phase 8 (code review), requiring the orchestrator to resend the instruction
+
+These were annoyances, not blockers. Spec 05 needed 1 verify iteration (TS errors). Spec 08 needed 1 test_fix iteration (3 unused imports). Everything else passed clean.
+
+### Message Delivery Breaks (Around Spec 09)
+
+After repeated `/compact` cycles to manage the growing context window, the orchestrator hit a critical failure:
+
+> *"Teammate messages not delivered in continued sessions: After context continuation, teammate messages may not be delivered."*
+
+The persistent teammate agents were spawned fresh for each spec, but after compaction the orchestrator's messages to them became unreliable — it would send a phase instruction and get no response. The team framework was still functional, but the communication channel between the lead and its teammates had degraded.
+
+### Self-Recovery via Task Agents
+
+Rather than failing, the orchestrator adapted its strategy mid-build:
+
+1. **Ran tests directly** — Instead of asking the tester to run Phase 5, the orchestrator executed typecheck/unit/E2E commands itself
+2. **Switched to Task agents** — For review phases (7 and 8), it spawned fresh one-shot Task agents instead of relying on persistent teammates. Task agents don't depend on team message delivery — they receive their full context as a prompt parameter.
+3. **Parallelized reviews** — When Phase 5 passed clean, it spawned Task agents for Phase 7 (screenshots) and Phase 8 (code review) simultaneously
+4. **Full pivot** — By the later specs, the orchestrator had concluded: *"Task agents more reliable than teammates: For specs where teammates don't respond, skip straight to Task agents for all phases"*
+
+The `progress/spec-NN/` artifacts are identical in structure regardless of whether a teammate or Task agent executed the phase — they only record outcomes. The result: specs 09-15 all achieved **0 fix iterations**, suggesting the adapted workflow was actually *more* reliable than the original.
+
+---
+
 ## What is MEMORY.md?
 
 Claude Code has a persistent memory system at `~/.claude/projects/<project>/memory/MEMORY.md`. This file survives across conversation sessions and context compactions. The agent reads it at the start of every conversation and updates it as it learns.
 
-During the 15-spec build, the agent team recorded:
+MEMORY.md is how the agent adapted its behavior over time without being explicitly told — including the team breakdown recovery described above. Every workaround, every pattern, every gotcha was recorded as it was discovered.
 
-**Progress tracking** — which specs were done, their commit hashes, and how many fix iterations each required:
-```
-- Spec 07: done (scenario-1-simple-payment) - commit ce5371f, 0 iterations (clean pass)
-- Spec 08: done (scenario-2-lightning-address) - commit 55fac13, 1 test_fix iteration (3 unused imports)
-```
+Here is the full MEMORY.md as it existed at the end of the build:
 
-**Behavioral patterns** — things that went wrong and how to handle them:
-```
-- Teammates often acknowledge but don't execute: Always resend with "Execute it NOW"
-- Phase 4/5 confusion: Tester frequently resends Phase 4 instead of Phase 5
-- Reviewer idle on Phase 8: Reviewer goes idle before executing code review. Always resend.
-- Task agents more reliable than teammates for fallback
-```
+```markdown
+# Memory - Lightning Wallet Demo Implementation
 
-**Spec-specific notes** — file counts, test counts, gotchas:
-```
-- Spec 10: 7 new files, 84 unit tests + 10 E2E, new src/lib/crypto.ts
-- Backend specs skip E2E/screenshots: No UI page means Phase 4 and Phase 7 are trivially passed
-```
+## Project: alby-oneshot-v6
+Implementing 15 specs sequentially using `/implement-spec` skill with persistent agent teams.
 
-MEMORY.md is how the agent adapts its behavior over time without being explicitly told. By spec 09, the agent had learned to run Phase 7 and Phase 8 in parallel when Phase 5 passed cleanly, and to fall back to Task agents when teammates stopped responding.
+## Progress
+- Spec 01: done (project-setup) - commit 288675b, tag step-02
+- Spec 02: done (process-management) - commit 9b94b0e, tag step-03
+- Spec 03: done (shared-types) - commit 7f4de2c, tag step-04
+- Spec 04: done (shared-components) - commit 513ff4c, tag step-05
+- Spec 05: done (wallet-context) - commit 550cc9c, tag step-06, 1 verify iteration (TS errors + data-testid)
+- Spec 06: done (layout) - commit 97a2ec9, tag step-07, 0 iterations (clean pass)
+- Spec 07: done (scenario-1-simple-payment) - commit ce5371f, tag step-08, 0 iterations (clean pass)
+- Spec 08: done (scenario-2-lightning-address) - commit 55fac13, tag step-09, 1 test_fix iteration (3 unused imports)
+- Spec 09: done (scenario-3-notifications) - commit b9b5e2c, tag step-10, 0 iterations (clean pass)
+- Spec 10: done (scenario-4-hold-invoice) - commit afd1164, tag step-11, 0 iterations (clean pass)
+- Spec 11: done (scenario-5-proof-of-payment) - commit 45c9a8d, tag step-12, 0 iterations (clean pass)
+- Spec 12: done (scenario-6-transaction-history) - commit 5e6e6a9, tag step-13, 0 iterations (clean pass)
+- Spec 13: done (scenario-7-nostr-zap) - commit 9074fa9, tag step-14, 0 iterations (clean pass)
+- Spec 14: done (scenario-8-fiat-conversion) - commit 8d317a7, tag step-15
+- Spec 15: done (backend) - commit 5092ce6, tag step-16, 0 iterations (clean pass)
+- Next: Spec 16 (testing-strategy) - FINAL SPEC
+
+## Key Patterns
+- **Teammates often acknowledge but don't execute**: Always resend with "Execute it NOW" if teammate just says "ready"
+- **Post-commit manifest drift**: After Phase 9, manifest update creates uncommitted files. Commit with `chore: update spec NN manifest to done status`
+- **IMPLEMENT.md labels don't match spec filenames**: Always check actual spec file names
+- **Preamble tracking**: Send full PREAMBLE in first message to each teammate, reminder in subsequent
+- **Phase 4/5 confusion**: Tester frequently resends Phase 4 instead of executing Phase 5. Always resend with explicit "Phase 4 is already done. Execute Phase 5 NOW."
+- **Spec 03 uses @getalby/sdk**: Invoke `/alby-agent-skill` for specs using Lightning/NWC
+- **Subpath exports confirmed**: `@getalby/lightning-tools/bolt11`, `/lnurl`, `/fiat` all work
+- **Clean passes**: Specs 03 and 04 passed with 0 iterations; spec 05 needed 1 verify iteration
+- **Reviewer idle on Phase 8**: Reviewer goes idle before executing Phase 8 code review. Always resend.
+- **Teammate messages not delivered in continued sessions**: After context continuation, teammate messages may not be delivered. Run tests yourself and use Task agents as fallback for review phases.
+- **Parallel Phase 7+8**: When Phase 5 passes clean, spawn Task agents for Phase 7 and 8 in parallel to save time.
+
+## Spec-Specific Notes
+- Specs 01-02: No code exports (config/scripts only)
+- Spec 03: Single file `src/types/index.ts`, 10 unit tests
+- Spec 04: 8 files (7 components + index.ts), 38 unit tests, Tailwind bitcoin color already in config
+- Spec 05: 13 files (context + 8 hooks + 3 wallet components), 149 unit tests + 1 E2E, Card.tsx modified for data-testid prop
+- Spec 06: 15 files (layout + sidebar + scenario page + transaction log + 8 placeholder pages), 66 unit tests + 6 E2E, total project: 215 unit + 7 E2E
+- Spec 07: 5 files (4 components + modified index), 53 unit tests + 9 E2E, total project: 268 unit + 27 E2E (9x3 browsers), builder also created test files in Phase 1
+- Spec 08: 4 new files + 2 modified + 2 test files, 38 unit tests + 9 E2E, total project: 306 unit + 36 E2E, builder created test files in Phase 1 again
+- Spec 09: 5 new files + 2 modified + 2 test files, 47 unit tests + 9 E2E, total project: 353 unit + 45 E2E, clean pass (0 iterations)
+- Spec 10: 7 new files + 2 modified + 3 test files, 84 unit tests + 10 E2E, total project: 436 unit + 55 E2E, clean pass (0 iterations), new src/lib/crypto.ts
+- Spec 11: 3 new files + 1 modified + 2 test files, 48 unit tests + 10 E2E, total project: 484 unit + 65 E2E, clean pass (0 iterations)
+- Spec 12: 3 new files + 1 new hook + 2 modified + test files, 89 unit tests + 10 E2E, total project: 573 unit + 75 E2E, clean pass (0 iterations)
+- Spec 13: 4 new files + 1 new hook + 2 modified + test files, 43 unit tests + 10 E2E, total project: 616 unit + 85 E2E, clean pass (0 iterations)
+- Spec 14: Fiat conversion scenario page, total project: ~660 unit + 85 E2E
+- Spec 15: 3 server files (config + index + routes/demo) + 1 test file, 4 unit tests + 0 E2E (backend-only), total project: 662 unit + 85 E2E, clean pass, npm installed supertest + @types/supertest
+- **Backend specs skip E2E/screenshots**: No UI page means Phase 4 (E2E) and Phase 7 (screenshots) are trivially passed
+- **Task agents more reliable than teammates**: For specs where teammates don't respond, skip straight to Task agents for all phases
+```
 
 ---
 
