@@ -2,7 +2,7 @@
 
 ## Project
 - Name: lightning-wallet-demo
-- Directory: /home/j0rd/src/alby-oneshot-v6
+- Directory: (project root)
 - Description: A React application demonstrating Bitcoin Lightning Network capabilities using the Alby SDK. Presents 8 "Alice & Bob" payment scenarios through an interactive sidebar navigation.
 
 ## Tech Stack
